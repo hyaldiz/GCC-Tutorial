@@ -1,0 +1,36 @@
+-no-pie: rastgele adreslemeyi kapatır
+-save-temps: .i .s .o dosyalarını saklar.
+-static: statik linkleme yapar. (Tüm kütüphaneleri static olarak içerecek şekilde)
+
+Symbol Binding
+	- Immediate Binding
+	- Lazy Binding (Default for gcc ; first call)
+		symbollerin adresleri ilk çağrıdan sonra belirlenir.
+
+Create Static Library and Link
+	- ilk adım olarak object dosyları oluşturulur.
+	- ar cr libmath.a addNumbers.o subNumbers.o çalıştırılır
+	- gcc main.c -lmath -o exe -I include -L lib #link işlemi
+
+Shared Libraries
+	- Shared libraryler position independed olarak derlenmeli (-fPIC)
+	- Kararlı sonuç için tüm aşamalarda aynı pic yöntemini kullan.
+	- -fpic (global offset table da limit var, machine specific)compiler küçük ve daha hızlı bir kod üretir. ;-fPIC limit yok 
+	- lib/x86 altında libc.so -> file libc.so çıktısı ASCI text yazar bunlar linker scripttir. libc çağrıldığında bu scpripti okur ve gerekli işlemleri yapar.
+
+Create Shared Library and Link
+	- gcc -fpic -c source1 source2
+	- gcc -fpic source1.o source2.o -shared -Wl,-soname,libsource.so.1 -o libsource.so.maj.min.patch
+	- ln -s libsource.so.1.2.0 libsource.so.1
+	- ln -s libsource.so.1 libsource.so #buna sadece compile ederken bakar, exe yi çalıştırırken libsource.so.1 yeterli readelf -a exe | Shared çıktısında gözüken çalıştırırken önemli olandır.
+	- gcc main.c -o exe -lmath -I include -L lib
+	- bu şekilde çalıştırırsak loader hata verecektir.
+	- echo $LD_LIBRARY_PATH
+	- LD_LIBRARY_PATH=/home/huseyin/Desktop/GCC/002SharedLibrary/lib:$LD_LIBRARY_PATH
+	- echo LD_LIBRARY_PATH
+	- export LD_LIBRARY_PATH
+
+	- library update i için soft link oluşturmaya kadar olan işlemler tekrarlanır. Major değişiklik yoksa exe yi tekrar derlemeye gerek kalmaz. Fakat major bir değişiklik varsa tüm compile işlemleri tekrarlanır.
+NOT:
+	- Static linklemede interpretter(linker) mevcut değildir.
+	- -no-pie flagi ile compile alınca file çıktısında executable yazıyor, fakat kullanılırsa shared object yazıyor.
